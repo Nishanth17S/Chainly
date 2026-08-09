@@ -1,0 +1,6 @@
+endpoint: https://vgbddbwidmlmfsjvrzcg.hasura.ap-south-1.nhost.run
+version: 3
+metadata_directory: metadata
+actions:
+  kind: synchronous
+  handler_webhook_baseurl: http://localhost:3000

@@ -1,0 +1,193 @@
+table:
+  name: workflow_runs
+  schema: public
+object_relationships:
+  - name: workflow
+    using:
+      foreign_key_constraint_on: workflow_id
+array_relationships:
+  - name: step_runs
+    using:
+      foreign_key_constraint_on:
+        column: run_id
+        table:
+          name: step_runs
+          schema: public
+insert_permissions:
+  - role: owner
+    permission:
+      check:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: owner
+      columns:
+        - id
+        - workflow_id
+        - status
+        - created_at
+        - updated_at
+  - role: editor
+    permission:
+      check:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: editor
+      columns:
+        - id
+        - workflow_id
+        - status
+        - created_at
+        - updated_at
+select_permissions:
+  - role: owner
+    permission:
+      columns:
+        - id
+        - workflow_id
+        - status
+        - created_at
+        - updated_at
+      filter:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: owner
+  - role: editor
+    permission:
+      columns:
+        - id
+        - workflow_id
+        - status
+        - created_at
+        - updated_at
+      filter:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: editor
+  - role: viewer
+    permission:
+      columns:
+        - id
+        - workflow_id
+        - status
+        - created_at
+        - updated_at
+      filter:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: viewer
+update_permissions:
+  - role: owner
+    permission:
+      columns:
+        - status
+        - updated_at
+      filter:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: owner
+      check: null
+  - role: editor
+    permission:
+      columns:
+        - status
+        - updated_at
+      filter:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: editor
+      check: null
+delete_permissions:
+  - role: owner
+    permission:
+      filter:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: owner
+  - role: editor
+    permission:
+      filter:
+        workflow:
+          _and:
+            - org_id:
+                _eq: X-Hasura-Org-Id
+            - organization:
+                members:
+                  user_id:
+                    _eq: X-Hasura-User-Id
+                  org_id:
+                    _eq: X-Hasura-Org-Id
+                  role:
+                    _eq: editor
+

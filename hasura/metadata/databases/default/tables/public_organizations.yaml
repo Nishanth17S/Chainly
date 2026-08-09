@@ -1,0 +1,108 @@
+table:
+  name: organizations
+  schema: public
+array_relationships:
+  - name: members
+    using:
+      foreign_key_constraint_on:
+        column: org_id
+        table:
+          name: org_members
+          schema: public
+  - name: workflows
+    using:
+      foreign_key_constraint_on:
+        column: org_id
+        table:
+          name: workflows
+          schema: public
+object_relationships:
+  - name: monthly_usage
+    using:
+      manual_configuration:
+        column_mapping:
+          id: org_id
+        insertion_order: null
+        remote_table:
+          name: org_monthly_usage
+          schema: public
+select_permissions:
+  - role: owner
+    permission:
+      columns:
+        - id
+        - name
+        - calls_allowed
+        - calls_used
+        - created_at
+        - updated_at
+      filter:
+        _and:
+          - id:
+              _eq: X-Hasura-Org-Id
+          - members:
+              user_id:
+                _eq: X-Hasura-User-Id
+              org_id:
+                _eq: X-Hasura-Org-Id
+              role:
+                _eq: owner
+  - role: editor
+    permission:
+      columns:
+        - id
+        - name
+        - calls_allowed
+        - calls_used
+        - created_at
+        - updated_at
+      filter:
+        _and:
+          - id:
+              _eq: X-Hasura-Org-Id
+          - members:
+              user_id:
+                _eq: X-Hasura-User-Id
+              org_id:
+                _eq: X-Hasura-Org-Id
+              role:
+                _eq: X-Hasura-Role
+  - role: viewer
+    permission:
+      columns:
+        - id
+        - name
+        - calls_allowed
+        - calls_used
+        - created_at
+        - updated_at
+      filter:
+        _and:
+          - id:
+              _eq: X-Hasura-Org-Id
+          - members:
+              user_id:
+                _eq: X-Hasura-User-Id
+              org_id:
+                _eq: X-Hasura-Org-Id
+              role:
+                _eq: X-Hasura-Role
+update_permissions:
+  - role: owner
+    permission:
+      columns:
+        - name
+        - updated_at
+      filter:
+        _and:
+          - id:
+              _eq: X-Hasura-Org-Id
+          - members:
+              user_id:
+                _eq: X-Hasura-User-Id
+              org_id:
+                _eq: X-Hasura-Org-Id
+              role:
+                _eq: owner
+      check: null
+

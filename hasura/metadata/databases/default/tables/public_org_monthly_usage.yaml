@@ -1,0 +1,66 @@
+table:
+  name: org_monthly_usage
+  schema: public
+object_relationships:
+  - name: organization
+    using:
+      manual_configuration:
+        column_mapping:
+          org_id: id
+        insertion_order: null
+        remote_table:
+          name: organizations
+          schema: public
+select_permissions:
+  - role: owner
+    permission:
+      columns:
+        - org_id
+        - runs_this_month
+      filter:
+        _and:
+          - org_id:
+              _eq: X-Hasura-Org-Id
+          - organization:
+              members:
+                user_id:
+                  _eq: X-Hasura-User-Id
+                org_id:
+                  _eq: X-Hasura-Org-Id
+                role:
+                  _eq: owner
+  - role: editor
+    permission:
+      columns:
+        - org_id
+        - runs_this_month
+      filter:
+        _and:
+          - org_id:
+              _eq: X-Hasura-Org-Id
+          - organization:
+              members:
+                user_id:
+                  _eq: X-Hasura-User-Id
+                org_id:
+                  _eq: X-Hasura-Org-Id
+                role:
+                  _eq: X-Hasura-Role
+  - role: viewer
+    permission:
+      columns:
+        - org_id
+        - runs_this_month
+      filter:
+        _and:
+          - org_id:
+              _eq: X-Hasura-Org-Id
+          - organization:
+              members:
+                user_id:
+                  _eq: X-Hasura-User-Id
+                org_id:
+                  _eq: X-Hasura-Org-Id
+                role:
+                  _eq: X-Hasura-Role
+
