@@ -1,6 +1,40 @@
-actions: []
+actions:
+  - name: triggerWorkflowRun
+    definition:
+      kind: synchronous
+      handler: http://localhost:3001/trigger-workflow-run
+      forward_client_headers: true
+    permissions:
+      - role: owner
+      - role: editor
+
+  - name: approveStep
+    definition:
+      kind: synchronous
+      handler: http://localhost:3001/approve-step
+      forward_client_headers: true
+    permissions:
+      - role: owner
+      - role: editor
+
 custom_types:
   enums: []
   input_objects: []
-  objects: []
+  objects:
+    - name: TriggerWorkflowRunOutput
+      fields:
+        - name: run_id
+          type: String!
+        - name: status
+          type: String!
+        - name: error
+          type: String
+    - name: ApproveStepOutput
+      fields:
+        - name: run_id
+          type: String!
+        - name: status
+          type: String!
+        - name: error
+          type: String
   scalars: []
