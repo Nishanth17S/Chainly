@@ -27,6 +27,15 @@ object_relationships:
           name: org_monthly_usage
           schema: public
 select_permissions:
+  - role: user
+    permission:
+      columns:
+        - id
+        - name
+      filter:
+        members:
+          user_id:
+            _eq: X-Hasura-User-Id
   - role: owner
     permission:
       columns:
