@@ -106,7 +106,9 @@ async function runner(runId, steps, runnerContext = {}) {
     let attemptCount = 1;
     let failed = false;
     let failError = null;
-    let nextStepOrder = null; // for conditional_branch jumps
+    // By default, any step can define next_step in its config to jump.
+    // conditional_branch can override this dynamically.
+    let nextStepOrder = step.config?.next_step ?? null;
 
     try {
       switch (stepType) {

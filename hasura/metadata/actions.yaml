@@ -2,7 +2,7 @@ actions:
   - name: triggerWorkflowRun
     definition:
       kind: synchronous
-      handler: http://localhost:3001/trigger-workflow-run
+      handler: "{{HANDLER_URL}}/trigger-workflow-run"
       forward_client_headers: true
     permissions:
       - role: owner
@@ -11,7 +11,7 @@ actions:
   - name: approveStep
     definition:
       kind: synchronous
-      handler: http://localhost:3001/approve-step
+      handler: "{{HANDLER_URL}}/approve-step"
       forward_client_headers: true
     permissions:
       - role: owner
