@@ -12,10 +12,13 @@
  *       "x-hasura-role":    "owner" | "editor"
  *     }
  *   }
+ *
+ * Auth: validates session variables + org membership before delegating
+ * to the shared executeRun() core.
  */
 
 const { adminQuery } = require('../hasura');
-const { runner } = require('../runner');
+const { executeRun } = require('../executeRun');
 
 async function triggerWorkflowRun(req, res) {
   try {
@@ -44,7 +47,7 @@ async function triggerWorkflowRun(req, res) {
       return res.status(403).json({ message: 'Workflow does not belong to your organization' });
     }
 
-    // ── 3. Verify caller is owner or editor in this org (double-check) ─────
+    // ── 3. Verify caller is owner or editor in this org (in-code double-check)
     const memberData = await adminQuery(
       `query CheckMember($user_id: uuid!, $org_id: uuid!) {
         org_members(where: {
@@ -60,78 +63,14 @@ async function triggerWorkflowRun(req, res) {
     }
     const callerRole = memberData.org_members[0].role;
 
-    // ── 4. Quota check ─────────────────────────────────────────────────────
-    const orgData = await adminQuery(
-      `query CheckQuota($org_id: uuid!) {
-        organizations_by_pk(id: $org_id) { calls_used calls_allowed }
-      }`,
-      { org_id: orgId },
-    );
-    const org = orgData.organizations_by_pk;
-    if (!org) return res.status(404).json({ message: 'Organization not found' });
-    if (org.calls_used >= org.calls_allowed) {
-      return res.status(429).json({
-        message: `Quota exhausted: ${org.calls_used}/${org.calls_allowed} runs used this period`,
-      });
-    }
-
-    // ── 5. Create workflow_run (status: running) ───────────────────────────
-    const runData = await adminQuery(
-      `mutation CreateRun($workflow_id: uuid!) {
-        insert_workflow_runs_one(object: { workflow_id: $workflow_id, status: "running" }) { id }
-      }`,
-      { workflow_id: workflowId },
-    );
-    const runId = runData.insert_workflow_runs_one.id;
-
-    // ── 6. Fetch ordered steps ─────────────────────────────────────────────
-    const stepsData = await adminQuery(
-      `query GetSteps($workflow_id: uuid!) {
-        workflow_steps(
-          where: { workflow_id: { _eq: $workflow_id } }
-          order_by: { step_order: asc }
-        ) { id step_order type config }
-      }`,
-      { workflow_id: workflowId },
-    );
-    const steps = stepsData.workflow_steps;
-    if (!steps.length) {
-      // No steps — mark completed, increment quota
-      await adminQuery(
-        `mutation CompleteRun($id: uuid!) {
-          update_workflow_runs_by_pk(pk_columns: {id: $id}, _set: {status: "completed"}) { id }
-        }`,
-        { id: runId },
-      );
-      await incrementQuota(orgId);
-      return res.json({ run_id: runId, status: 'completed' });
-    }
-
-    // ── 7. Execute steps ───────────────────────────────────────────────────
-    const result = await runner(runId, steps, { callerRole });
-
-    // ── 8. On success: increment quota ────────────────────────────────────
-    if (result.status === 'completed') {
-      await incrementQuota(orgId);
-    }
-
-    return res.json({ run_id: runId, status: result.status, error: result.error ?? null });
+    // ── 4–8. Quota, create run, execute steps, increment quota ────────────
+    const result = await executeRun(workflowId, orgId, callerRole);
+    return res.json(result);
   } catch (err) {
     console.error('[triggerWorkflowRun] Unhandled error:', err);
-    return res.status(500).json({ message: err.message });
+    const status = err.statusCode ?? 500;
+    return res.status(status).json({ message: err.message });
   }
-}
-
-async function incrementQuota(orgId) {
-  await adminQuery(
-    `mutation IncrementQuota($org_id: uuid!) {
-      update_organizations_by_pk(
-        pk_columns: { id: $org_id },
-        _inc: { calls_used: 1 }
-      ) { calls_used }
-    }`,
-    { org_id: orgId },
-  );
 }
 
 module.exports = { triggerWorkflowRun };

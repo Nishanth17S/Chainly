@@ -31,18 +31,22 @@ insert_permissions:
   - role: editor
     permission:
       check:
-        workflow:
-          _and:
-            - org_id:
-                _eq: X-Hasura-Org-Id
-            - organization:
-                members:
-                  user_id:
-                    _eq: X-Hasura-User-Id
-                  org_id:
+        _and:
+          - workflow:
+              _and:
+                - org_id:
                     _eq: X-Hasura-Org-Id
-                  role:
-                    _eq: editor
+                - organization:
+                    members:
+                      user_id:
+                        _eq: X-Hasura-User-Id
+                      org_id:
+                        _eq: X-Hasura-Org-Id
+                      role:
+                        _eq: editor
+          - type:
+              _nin:
+                - webhook
       columns:
         - id
         - workflow_id
@@ -50,6 +54,7 @@ insert_permissions:
         - config
         - created_at
         - updated_at
+
 select_permissions:
   - role: owner
     permission:
