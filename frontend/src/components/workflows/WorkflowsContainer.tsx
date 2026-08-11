@@ -13,9 +13,10 @@ export function WorkflowsContainer() {
   const { selectedOrgId, selectedRole } = useOrgContext();
   const [isBuilding, setIsBuilding] = useState(false);
 
-  const { data, loading, error, refetch } = useQuery(gql(GET_ORG_WORKFLOWS), {
+  const { data, loading, error, refetch } = useQuery<{ workflows: any[] }>(gql(GET_ORG_WORKFLOWS), {
     variables: { org_id: selectedOrgId },
     skip: !selectedOrgId,
+    fetchPolicy: 'cache-and-network',
   });
 
   const isViewer = selectedRole === 'viewer';

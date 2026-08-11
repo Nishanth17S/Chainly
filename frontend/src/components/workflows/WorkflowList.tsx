@@ -21,7 +21,7 @@ export function WorkflowList({ workflows }: { workflows: Workflow[] }) {
   const { selectedRole } = useOrgContext();
   const isViewer = selectedRole === 'viewer';
   
-  const [runWorkflow, { loading: isRunning }] = useMutation(gql(RUN_WORKFLOW));
+  const [runWorkflow, { loading: isRunning }] = useMutation<{ triggerWorkflowRun: { run_id: string } }>(gql(RUN_WORKFLOW));
   const [activeRunIds, setActiveRunIds] = useState<Record<string, string>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 

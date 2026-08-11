@@ -11,11 +11,11 @@ export function WorkflowRunPanel({ runId }: { runId: string }) {
   const { selectedRole } = useOrgContext();
   const isViewer = selectedRole === 'viewer';
   
-  const { data, loading, error } = useSubscription(gql(WATCH_RUN), {
+  const { data, loading, error } = useSubscription<{ step_runs: any[] }>(gql(WATCH_RUN), {
     variables: { run_id: runId },
   });
 
-  const [approveStep, { loading: approvingId }] = useMutation(gql(APPROVE_STEP));
+  const [approveStep, { loading: approvingId }] = useMutation<{ approveStep: { run_id: string; status: string; error: string | null } }>(gql(APPROVE_STEP));
 
   const handleApprove = async (stepRunId: string) => {
     try {

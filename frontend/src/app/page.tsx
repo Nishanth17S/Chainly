@@ -29,12 +29,12 @@ export default function DashboardPage() {
   const { signOut } = useSignOut();
   const { selectedOrgId, selectedRole, setSelectedOrg } = useOrgContext();
 
-  const { data, loading: orgsLoading, error } = useQuery(GET_MY_ORGS, {
+  const { data, loading: orgsLoading, error } = useQuery<{ org_members: { org_id: string; role: string; organization: { name: string } }[] }>(GET_MY_ORGS, {
     variables: { userId: user?.id },
     skip: !user?.id || !!selectedOrgId, // Skip if no user, or if we already selected an org
   });
 
-  const { data: usageData } = useQuery(gql(GET_ORG_USAGE), {
+  const { data: usageData } = useQuery<{ organizations_by_pk: { id: string; name: string; calls_allowed: number; calls_used: number; monthly_usage: { runs_this_month: number } } }>(gql(GET_ORG_USAGE), {
     variables: { org_id: selectedOrgId },
     skip: !selectedOrgId,
   });

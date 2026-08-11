@@ -25,7 +25,7 @@ export function WorkflowBuilder({ onCancel, onSuccess }: { onCancel: () => void,
   const [name, setName] = useState('');
   const [steps, setSteps] = useState<StepDraft[]>([]);
   const [triggers, setTriggers] = useState<TriggerDraft[]>([]);
-  const [createWorkflow, { loading, error }] = useMutation(gql(CREATE_WORKFLOW));
+  const [createWorkflow, { loading, error }] = useMutation<{ insert_workflows_one: { id: string; name: string } }>(gql(CREATE_WORKFLOW));
 
   const isOwner = selectedRole === 'owner';
 
