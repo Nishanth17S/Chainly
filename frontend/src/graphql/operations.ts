@@ -67,4 +67,22 @@ export const CREATE_WORKFLOW = `
   }
 `;
 
+export const RUN_WORKFLOW = `
+  mutation RunWorkflow($workflow_id: String!) {
+    triggerWorkflowRun(workflow_id: $workflow_id) {
+      run_id
+    }
+  }
+`;
+
+export const APPROVE_STEP = `
+  mutation ApproveStep($step_run_id: String!) {
+    approveStep(step_run_id: $step_run_id) {
+      run_id
+      status
+      error
+    }
+  }
+`;
+
 

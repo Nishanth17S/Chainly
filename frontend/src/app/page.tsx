@@ -8,6 +8,7 @@ import { useQuery } from '@apollo/client/react';
 import { useOrgContext } from '@/context/OrgContext';
 import { Loader2, LogOut } from 'lucide-react';
 import { WorkflowsContainer } from '@/components/workflows/WorkflowsContainer';
+import { GET_ORG_USAGE } from '@/graphql/operations';
 
 const GET_MY_ORGS = gql`
   query GetMyOrgs($userId: uuid!) {
@@ -31,6 +32,11 @@ export default function DashboardPage() {
   const { data, loading: orgsLoading, error } = useQuery(GET_MY_ORGS, {
     variables: { userId: user?.id },
     skip: !user?.id || !!selectedOrgId, // Skip if no user, or if we already selected an org
+  });
+
+  const { data: usageData } = useQuery(gql(GET_ORG_USAGE), {
+    variables: { org_id: selectedOrgId },
+    skip: !selectedOrgId,
   });
 
   useEffect(() => {
@@ -133,6 +139,11 @@ export default function DashboardPage() {
               <span className="text-sm px-3 py-1 bg-gray-100 rounded-full font-medium text-gray-700">
                 Org ID: {selectedOrgId.substring(0, 8)}... ({selectedRole})
               </span>
+              {usageData?.organizations_by_pk && (
+                <span className="text-sm px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-medium border border-blue-200">
+                  {usageData.organizations_by_pk.calls_used} / {usageData.organizations_by_pk.calls_allowed} calls this month
+                </span>
+              )}
             </div>
             <div>
               <button

@@ -1,6 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { useOrgContext } from '@/context/OrgContext';
+import { RUN_WORKFLOW } from '@/graphql/operations';
+import { WorkflowRunPanel } from './WorkflowRunPanel';
+import { Play, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 
 type Workflow = {
   id: string;
@@ -12,6 +18,38 @@ type Workflow = {
 };
 
 export function WorkflowList({ workflows }: { workflows: Workflow[] }) {
+  const { selectedRole } = useOrgContext();
+  const isViewer = selectedRole === 'viewer';
+  
+  const [runWorkflow, { loading: isRunning }] = useMutation(gql(RUN_WORKFLOW));
+  const [activeRunIds, setActiveRunIds] = useState<Record<string, string>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+
+  const handleRun = async (workflowId: string) => {
+    try {
+      const { data } = await runWorkflow({ variables: { workflow_id: workflowId } });
+      if (data?.triggerWorkflowRun?.run_id) {
+        const runId = data.triggerWorkflowRun.run_id;
+        setActiveRunIds(prev => ({ ...prev, [workflowId]: runId }));
+        setExpandedCards(prev => ({ ...prev, [workflowId]: true }));
+      }
+    } catch (e) {
+      console.error('Failed to trigger run:', e);
+      alert('Failed to trigger workflow run.');
+    }
+  };
+
+  const toggleExpand = (workflowId: string, fallbackRunId?: string) => {
+    setExpandedCards(prev => {
+      const isExpanded = !prev[workflowId];
+      if (isExpanded && !activeRunIds[workflowId] && fallbackRunId) {
+        // Automatically set the latest run if we expand and don't have an active one
+        setActiveRunIds(current => ({ ...current, [workflowId]: fallbackRunId }));
+      }
+      return { ...prev, [workflowId]: isExpanded };
+    });
+  };
+
   if (workflows.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow border border-gray-100">
@@ -43,11 +81,31 @@ export function WorkflowList({ workflows }: { workflows: Workflow[] }) {
               </p>
             </div>
           </div>
-          <div className="bg-gray-50 px-4 py-4 sm:px-6">
-            <div className="text-sm">
-              <button className="font-medium text-blue-600 hover:text-blue-500 mr-4">View</button>
-            </div>
+          <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-between items-center">
+            <button 
+              onClick={() => toggleExpand(workflow.id, workflow.runs[0]?.id)}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center"
+              disabled={!workflow.runs[0] && !activeRunIds[workflow.id]}
+            >
+              {expandedCards[workflow.id] ? <ChevronUp className="w-4 h-4 mr-1" /> : <ChevronDown className="w-4 h-4 mr-1" />}
+              {activeRunIds[workflow.id] ? 'View Live Run' : 'History'}
+            </button>
+            
+            {!isViewer && (
+              <button 
+                onClick={() => handleRun(workflow.id)}
+                disabled={isRunning}
+                className="flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
+              >
+                {isRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1 fill-current" />}
+                Run
+              </button>
+            )}
           </div>
+          
+          {expandedCards[workflow.id] && activeRunIds[workflow.id] && (
+            <WorkflowRunPanel runId={activeRunIds[workflow.id]} />
+          )}
         </div>
       ))}
     </div>
