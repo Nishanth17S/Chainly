@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { ApolloClient, InMemoryCache, HttpLink, split } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
 import { setContext } from '@apollo/client/link/context';
@@ -17,7 +17,9 @@ export function ApolloAppProvider({ children }: { children: React.ReactNode }) {
 
   // Use a ref so the authLink always has the freshest values without needing to recreate the ApolloClient entirely
   const authState = React.useRef({ token, selectedOrgId, selectedRole });
-  authState.current = { token, selectedOrgId, selectedRole };
+  useEffect(() => {
+    authState.current = { token, selectedOrgId, selectedRole };
+  }, [token, selectedOrgId, selectedRole]);
 
   const client = useMemo(() => {
     // Determine the base URL for HTTP and WS from Nhost config, or hardcode for now
@@ -32,7 +34,7 @@ export function ApolloAppProvider({ children }: { children: React.ReactNode }) {
     });
 
     const authLink = setContext((_, { headers }) => {
-      const { token, selectedOrgId, selectedRole } = authState.current;
+      const { token, selectedRole } = authState.current;
       // Dynamic headers evaluated on every HTTP request
       const outgoingHeaders = {
         ...headers,
@@ -51,7 +53,7 @@ export function ApolloAppProvider({ children }: { children: React.ReactNode }) {
       createClient({
         url: wsUrl,
         connectionParams: () => {
-          const { token, selectedOrgId, selectedRole } = authState.current;
+          const { token, selectedRole } = authState.current;
           // Evaluated when the socket connects
           return {
             headers: {
