@@ -57,3 +57,14 @@ export const GET_ORG_USAGE = `
     }
   }
 `;
+
+export const CREATE_WORKFLOW = `
+  mutation CreateWorkflow($object: workflows_insert_input!) {
+    insert_workflows_one(object: $object) {
+      id
+      name
+    }
+  }
+`;
+
+

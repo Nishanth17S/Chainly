@@ -7,6 +7,7 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useOrgContext } from '@/context/OrgContext';
 import { Loader2, LogOut } from 'lucide-react';
+import { WorkflowsContainer } from '@/components/workflows/WorkflowsContainer';
 
 const GET_MY_ORGS = gql`
   query GetMyOrgs($userId: uuid!) {
@@ -152,8 +153,8 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-gray-500">
             You are logged in as {user?.email} with the <strong>{selectedRole}</strong> role.
           </p>
-          <div className="mt-6 border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center text-gray-400">
-            Workflow Builder goes here...
+          <div className="mt-8">
+            <WorkflowsContainer />
           </div>
         </div>
       </main>

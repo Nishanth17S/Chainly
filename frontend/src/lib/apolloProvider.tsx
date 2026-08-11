@@ -15,6 +15,10 @@ export function ApolloAppProvider({ children }: { children: React.ReactNode }) {
   const user = useUserData();
   const { selectedOrgId, selectedRole } = useOrgContext();
 
+  // Use a ref so the authLink always has the freshest values without needing to recreate the ApolloClient entirely
+  const authState = React.useRef({ token, selectedOrgId, selectedRole });
+  authState.current = { token, selectedOrgId, selectedRole };
+
   const client = useMemo(() => {
     // Determine the base URL for HTTP and WS from Nhost config, or hardcode for now
     const subdomain = process.env.NEXT_PUBLIC_NHOST_SUBDOMAIN || 'vgbddbwidmlmfsjvrzcg';
@@ -28,14 +32,18 @@ export function ApolloAppProvider({ children }: { children: React.ReactNode }) {
     });
 
     const authLink = setContext((_, { headers }) => {
+      const { token, selectedOrgId, selectedRole } = authState.current;
       // Dynamic headers evaluated on every HTTP request
+      const outgoingHeaders = {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : '',
+        ...(selectedRole ? { 'x-hasura-role': selectedRole } : {}),
+      };
+      
+      console.log('Apollo HTTP Request Headers going out:', outgoingHeaders);
+      
       return {
-        headers: {
-          ...headers,
-          authorization: token ? `Bearer ${token}` : '',
-          ...(selectedOrgId ? { 'x-hasura-org-id': selectedOrgId } : {}),
-          ...(selectedRole ? { 'x-hasura-role': selectedRole } : {}),
-        },
+        headers: outgoingHeaders,
       };
     });
 
@@ -43,11 +51,11 @@ export function ApolloAppProvider({ children }: { children: React.ReactNode }) {
       createClient({
         url: wsUrl,
         connectionParams: () => {
+          const { token, selectedOrgId, selectedRole } = authState.current;
           // Evaluated when the socket connects
           return {
             headers: {
               authorization: token ? `Bearer ${token}` : '',
-              ...(selectedOrgId ? { 'x-hasura-org-id': selectedOrgId } : {}),
               ...(selectedRole ? { 'x-hasura-role': selectedRole } : {}),
             },
           };
@@ -72,7 +80,7 @@ export function ApolloAppProvider({ children }: { children: React.ReactNode }) {
       link: splitLink,
       cache: new InMemoryCache(),
     });
-  }, [token, selectedOrgId, selectedRole]); // Recreate client if token, org, or role changes to ensure WS reconnects
+  }, []); // Initialize once, headers read dynamically via ref
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }
